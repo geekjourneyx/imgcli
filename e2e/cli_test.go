@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -91,7 +92,7 @@ func runJSONCommand(t *testing.T, args ...string) {
 	t.Helper()
 	cmdArgs := append([]string{"run", "."}, args...)
 	cmd := exec.Command("go", cmdArgs...)
-	cmd.Dir = "/root/go/src/imgcli"
+	cmd.Dir = repoRoot(t)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("command failed: %v\n%s", err, string(out))
@@ -103,6 +104,15 @@ func runJSONCommand(t *testing.T, args ...string) {
 	if !envelope.OK {
 		t.Fatalf("expected ok response: %s", string(out))
 	}
+}
+
+func repoRoot(t *testing.T) string {
+	t.Helper()
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("resolve test file path")
+	}
+	return filepath.Clean(filepath.Join(filepath.Dir(filename), ".."))
 }
 
 func writeJPEG(t *testing.T, path string, width, height int, c color.Color) {
