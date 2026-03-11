@@ -1,0 +1,24 @@
+name: ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: golangci/golangci-lint-action@v7
+        with:
+          version: v2.10.1
+          args: --timeout=5m
+      - run: test -z "$(gofmt -l .)"
+      - run: go vet ./...
+      - run: CGO_ENABLED=1 go test -count=1 ./...
+      - run: make build
+      - run: make release-check
